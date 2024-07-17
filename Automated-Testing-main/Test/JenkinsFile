@@ -1,0 +1,36 @@
+pipeline {
+    agent {
+        docker {
+            image 'python:3.9'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/Ayush-Balodi/Automated-Testing.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build('myapp-image')
+                }
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                script {
+                    docker.image('myapp-image').inside {
+                        sh 'pytest'
+                    }
+                }
+            }
+        }
+        stage('Publish Test Results') {
+            steps {
+                junit '**/test-results.xml'
+            }
+        }
+    }
+}
